@@ -3,33 +3,26 @@ using System.Globalization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 
-namespace DNTCaptcha.Core
+namespace DNTCaptcha.Core;
+
+/// <summary>
+///     Providers Extensions
+/// </summary>
+public static class ProvidersExtensions
 {
     /// <summary>
-    /// Providers Extensions
+    ///     The cookie value's bindings.
     /// </summary>
-    public static class ProvidersExtensions
+    public static string GetSalt(this HttpContext context, ICaptchaCryptoProvider captchaProtectionProvider)
     {
-        /// <summary>
-        /// The cookie value's bindings.
-        /// </summary>
-        public static string GetSalt(this HttpContext context, ICaptchaCryptoProvider captchaProtectionProvider)
-        {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
+        ArgumentNullException.ThrowIfNull(context);
 
-            if (captchaProtectionProvider == null)
-            {
-                throw new ArgumentNullException(nameof(captchaProtectionProvider));
-            }
+        ArgumentNullException.ThrowIfNull(captchaProtectionProvider);
 
-            var userAgent = (string)context.Request.Headers[HeaderNames.UserAgent];
-            var issueDate = DateTime.Now.ToString("yyyy_MM_dd", CultureInfo.InvariantCulture);
-            var name = typeof(ProvidersExtensions).Name;
-            var salt = $"::{issueDate}::{name}::{userAgent}";
-            return captchaProtectionProvider.Hash(salt).HashString;
-        }
+        var userAgent = context.Request.Headers[HeaderNames.UserAgent].ToString();
+        var issueDate = DateTime.Now.ToString(format: "yyyy_MM_dd", CultureInfo.InvariantCulture);
+        var salt = $"::{issueDate}::{nameof(ProvidersExtensions)}::{userAgent}";
+
+        return captchaProtectionProvider.Hash(salt).HashString;
     }
 }
